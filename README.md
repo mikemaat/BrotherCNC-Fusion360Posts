@@ -1,4 +1,4 @@
-# BrotherCNC-Fusion360Posts
+# Brother CNC - Fusion 360 Posts #
 Contains post processors for Brother CNC machines
 
 ## A00 Post Processor ##

@@ -1,6 +1,8 @@
 /**
   Copyright (C) 2012-2017 by Autodesk, Inc.
   All rights reserved.
+  
+  Contributions from: Autodesk, Eric Stratten, Mike Maat, and others.
 */
 
 description = "BrotherA00";
@@ -10,7 +12,7 @@ legal = "Copyright (C) 2012-2017 by Autodesk, Inc.";
 certificationLevel = 2;
 minimumRevision = 24000;
 
-longDescription = "Generic milling post for Brother.";
+longDescription = "Generic milling post for Brother A00 controls.";
 
 extension = "NC";
 programNameIsInteger = true;
@@ -29,57 +31,53 @@ allowedCircularPlanes = undefined; // allow any circular motion
 
 // user-defined properties
 properties = {
-  writeMachine: true, // write machine
-  writeTools: true, // writes the tools
-  preloadTool: true, // preloads next tool on tool change if any
-  showSequenceNumbers: true, // show sequence numbers
-  sequenceNumberStart: 10, // first sequence number
-  sequenceNumberIncrement: 5, // increment for sequence numbers
-  optionalStop: true, // optional stop
-  o8: false, // specifies 8-digit program number
-  separateWordsWithSpace: true, // specifies that the words should be separated with a white space
-  useRadius: false, // specifies that arcs should be output using the radius (R word) instead of the I, J, and K words.
-  useParametricFeed: false, // specifies that feed should be output using Q values
-  showNotes: false, // specifies that operation notes should be output.
-  useAAxis: false,
-  useExtWCS: false,
-  writeFileTransfer:  true, 		// Add leading and trailing % for file transfer
-  safeStartAllOperations: false,	    // Write optional blocks at the beginning of all operations that include all commands to start program
-  useChipShower: false,	    // Run Chip Shower M400/M401 at end of cycle.
-  useAiiiCutterComp: false,	// Enable C00 High Accuracy (AIII) with M260, off with M269
-  endSpindleHome: false,			// Use G28 G91 Z0 at end of program to return spindle to home
-  useA00Interpolation: true,			// Use G02/G03, G102/G103, G202,G203 instead of G17/G18/G19-G02/G03
-  homePositionCenter: true,  // Moves the part in X in center under spindle at end of program (ONLY WORKS IF THE TABLE IS MOVING)
+  writeMachine: true, // Write machine
+  writeTools: true, // Writes the tools
+  preloadTool: true, // Preloads next tool on tool change if any
+  showLineNumbers: true, // Show line numbers
+  lineNumberStart: 10, // First sequence number
+  lineNumberIncrement: 5, // Increment for sequence numbers
+  optionalStop: false, // Automatically outputs optional stop after each operation.
+  o8: false, // Specifies 8-digit program number
+  separateWordsWithSpace: true, // Specifies that the words should be separated with a white space
+  useRadius: false, // Specifies that arcs should be output using the radius (R word) instead of the I, J, and K words.
+  useParametricFeed: false, // Specifies that feed should be output using Q values
+  writeNotes: true, // Specifies that operation notes should be output.
+  enableAAxis: false, // Specifies whether to use the A axis.
+  useExtWCS: false, // Begins WCS increments with G54.1 P01, G54.1 P02 ...
+  writeFileTransfer:  true, // Add leading and trailing % for file transfer
+  safeStartAllOperations: false, // Write optional blocks at the beginning of all operations that include all commands to start program
+  endChipShower: false, // Run Chip Shower M400/M401 at end of cycle.
+  endSpindleHome: false, // Use G28 G91 Z0 at end of program to return spindle to home
+  endCenterPart: true,  // Moves the part in X in center under spindle at end of program (ONLY WORKS IF THE TABLE IS MOVING)
   includePostWarnings: true // Include post warnings (i.e. G20 unit parameter set in machine, M400 time, etc.) in the generated output
 };
 
 // user-defined property definitions
 propertyDefinitions = {
-  writeMachine: {title:"Write machine", description:"Output the machine settings in the header of the code.", group:0, type:"boolean"},
-  writeTools: {title:"Write tool list", description:"Output a tool list in the header of the code.", group:0, type:"boolean"},
-  preloadTool: {title:"Preload tool", description:"Preloads the next tool at a tool change (if any).", group:1, type:"boolean"},
-  showSequenceNumbers: {title:"Use sequence numbers", description:"Use sequence numbers for each block of outputted code.", group:1, type:"boolean"},
-  sequenceNumberStart: {title:"Sequence number start", description:"The number at which to start the sequence numbers.", group:1, type:"integer"},
-  sequenceNumberIncrement: {title:"Sequence number increment", description:"The amount by which the sequence number is incremented by in each block.", group:1, type:"integer"},
-  optionalStop: {title:"Optional stop", description:"Outputs optional stop code during when necessary in the code.", type:"boolean"},
-  o8: {title:"8 digit program number", description:"Specifies that an 8 digit program number is needed.", type:"boolean"},
-  separateWordsWithSpace: {title:"Separate words with space", description:"Adds spaces between words if 'yes' is selected.", type:"boolean"},
+  o8: {title:"8 digit program number", description:"Specifies that an 8 digit program number is needed.", group:0, type:"boolean"},
+  writeMachine: {title:"Write machine settings", description:"Output the machine settings in the header of the code.", group:1, type:"boolean"},
+  writeTools: {title:"Write tool list", description:"Output a tool list in the header of the code.", group:1, type:"boolean"},
+  writeNotes: {title:"Write notes", description:"Writes operation notes as comments in the outputted code.", group:1, type:"boolean"},
+  useExtWCS: {title:"Use G54.1 Pnn", description:"Begins WCS increments with G54.1 P01, G54.1 P02 ...", type:"boolean"},
+  enableAAxis: {title:"Enable A-axis", description:"Specifies whether to enable the A axis.", type:"boolean"},
   useRadius: {title:"Radius arcs", description:"If yes is selected, arcs are outputted using radius values rather than IJK.", type:"boolean"},
   useParametricFeed:  {title:"Parametric feed", description:"Specifies the feed value that should be output using a Q value.", type:"boolean"},
-  showNotes: {title:"Show notes", description:"Writes operation notes as comments in the outputted code.", type:"boolean"},
-  useAAxis: {title:"Use A-axis", description:"Specifies whether to use the A axis.", type:"boolean"},
-  useExtWCS: {title:"Use G54.1 Pnn", description:"Begins WCS increments with G54.1 P01, G54.1 P02 ...", type:"boolean"},
-  writeFileTransfer: {title:"File transfer start-end", description:"Specifies whether to write leading and trailing % for file transfer", type:"boolean"},
-  safeStartAllOperations: {title:"Safe start all operations", description:"Included safe start preamble for all operations", type:"boolean"},
-  useChipShower: {title:"Use chip shower M400/M401", description:"Run Chip Shower M400/M401 at end of cycle.", type:"boolean"},
-  useAiiiCutterComp: {title:"Use AIII with cutter comp", description:"Use High Accuracy when Cutter Comp is declared.", type:"boolean"},
-  endSpindleHome: {title:"Return spindle home w/ G28 G91 Z0", description:"Return Spindle to Home with G28 G91 Z0", type:"boolean"},
-  useA00Interpolation: {title:"Use A00 planar interpolation", description:"Use G02/G03, G102/G103, G202,G203 instead of G17/G18/G19-G02/G03", type:"boolean"},
-  homePositionCenter: {title:"Home position center", description:"Enable to center the part along X at the end of program for easy access. Requires a CNC with a moving table.", type:"boolean"},
-  includePostWarnings: {title:"Include post warnings", description:"Include post warnings (i.e. G20 unit parameter set in machine, M400 time, etc.) in the generated output", type:"boolean"},
+  showLineNumbers: {title:"Use line numbers", description:"Use line numbers for each block of outputted code.", group:2, type:"boolean"},
+  lineNumberStart: {title:"Line number start", description:"The number at which to start the line numbers.", group:3, type:"integer"},
+  lineNumberIncrement: {title:"Line number increment", description:"The amount by which the line number is incremented by in each block.", group:3, type:"integer"},
+  separateWordsWithSpace: {title:"Separate words with space", description:"Adds spaces between words if 'yes' is selected.", type:"boolean"},
+  safeStartAllOperations: {title:"Safe start all operations", description:"Include safe start preamble for all operations.", type:"boolean"},
+  preloadTool: {title:"Preload next tool", description:"Preloads the next tool at a tool change (if any).", type:"boolean"},
+  optionalStop: {title:"Automatic optional stop", description:"Automatically outputs optional stop after each operation.", type:"boolean"},
+  endChipShower: {title:"Chip shower at end", description:"Run chip shower (M400/M401) at end of the cycle.", type:"boolean"},
+  endSpindleHome: {title:"Return spindle home at end", description:"Return spindle to home at end of the cycle with G28 G91 Z0.", type:"boolean"},
+  endCenterPart: {title:"Center part at end", description:"Enable to center the part along X at the end of program for easy access. Requires a CNC with a moving table.", type:"boolean"},
+  includePostWarnings: {title:"Include post warnings", description:"Include post warnings (i.e. G20 unit parameter set in machine, M400 time, etc.) in the generated output.", type:"boolean"},
+  writeFileTransfer: {title:"Add (%) for file transfer", description:"Specifies whether to write leading and trailing % for file transfer.", type:"boolean"},
 };
 
-var permittedCommentChars = " ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.,=-";   // ELS2017 - Removed Underscore "_", Character causes file transfer issues
+var permittedCommentChars = " ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.,=-";
 
 var gFormat = createFormat({prefix:"G", width:2, zeropad:true, decimals:1});
 var mFormat = createFormat({prefix:"M", width:2, zeropad:true, decimals:1});
@@ -136,12 +134,11 @@ var activeMovements; // do not use by default
 var currentFeedId;
 var TSCprimed = false;
 
-
 /**
   Writes the specified block.
 */
 function writeBlock() {
-  if (properties.showSequenceNumbers) {
+  if (properties.showLineNumbers) {
     if (optionalSection) {
       var text = formatWords(arguments);
       if (text) {
@@ -150,7 +147,7 @@ function writeBlock() {
     } else {
       writeWords("N" + sequenceNumber, arguments);
     }
-    sequenceNumber += properties.sequenceNumberIncrement;
+    sequenceNumber += properties.lineNumberIncrement;
   } else {
     writeWords(arguments);
   }
@@ -160,11 +157,11 @@ function writeBlock() {
   Writes the specified optional block.
 */
 function writeOptionalBlock() {
-  if (properties.showSequenceNumbers) {
+  if (properties.showLineNumbers) {
     var words = formatWords(arguments);
     if (words) {
       writeWords("/", "N" + sequenceNumber, words);
-      sequenceNumber += properties.sequenceNumberIncrement;
+      sequenceNumber += properties.lineNumberIncrement;
     }
   } else {
     writeWords("/", arguments);
@@ -187,7 +184,7 @@ function onOpen() {
     maximumCircularSweep = toRad(90); // avoid potential center calculation errors for CNC
   }
 
-  if (properties.useAAxis) { // note: setup your machine here
+  if (properties.enableAAxis) { // note: setup your machine here
     var aAxis = createAxis({coordinate:0, table:true, axis:[1, 0, 0], range:[-360, 360], preference:1});
     //var cAxis = createAxis({coordinate:2, table:false, axis:[0, 0, 1], range:[-360, 360], preference:1});
     machineConfiguration = new MachineConfiguration(aAxis);
@@ -210,7 +207,7 @@ function onOpen() {
     setWordSeparator("");
   }
 
-  sequenceNumber = properties.sequenceNumberStart;
+  sequenceNumber = properties.lineNumberStart;
   
 	if(properties.writeFileTransfer){		
 	  writeln("%");
@@ -249,16 +246,16 @@ function onOpen() {
     return;
   }
 
-    if (properties.includePostWarnings) {
-	    switch (unit) {
-		    case IN:
-	    	  writeln("(G20 - INCH MODE TO BE SET IN USER PARAMETERS - CONSULT YOUR MANUAL)");
-		      break;
-	  	  case MM:
-	    		writeln("(G21 - MILLIMETER MODE TO BE SET IN USER PARAMETERS - CONSULT YOUR MANUAL)");
-	    	break;
+  if (properties.includePostWarnings) {
+    switch (unit) {
+      case IN:
+        writeln("(G20 - INCH MODE TO BE SET IN USER PARAMETERS - CONSULT YOUR MANUAL)");
+        break;
+      case MM:
+        writeln("(G21 - MILLIMETER MODE TO BE SET IN USER PARAMETERS - CONSULT YOUR MANUAL)");
+        break;
       }
-	}
+    }
 
   // dump machine configuration
   var vendor = machineConfiguration.getVendor();
@@ -314,30 +311,28 @@ function onOpen() {
     }
   }
 
-  if (false) {
-    // check for duplicate tool number
-    for (var i = 0; i < getNumberOfSections(); ++i) {
-      var sectioni = getSection(i);
-      var tooli = sectioni.getTool();
-      for (var j = i + 1; j < getNumberOfSections(); ++j) {
-        var sectionj = getSection(j);
-        var toolj = sectionj.getTool();
-        if (tooli.number == toolj.number) {
-          if (xyzFormat.areDifferent(tooli.diameter, toolj.diameter) ||
-              xyzFormat.areDifferent(tooli.cornerRadius, toolj.cornerRadius) ||
-              abcFormat.areDifferent(tooli.taperAngle, toolj.taperAngle) ||
-              (tooli.numberOfFlutes != toolj.numberOfFlutes)) {
-            error(
-              subst(
-                localize("Using the same tool number for different cutter geometry for operation '%1' and '%2'."),
-                sectioni.hasParameter("operation-comment") ? sectioni.getParameter("operation-comment") : ("#" + (i + 1)),
-                sectionj.hasParameter("operation-comment") ? sectionj.getParameter("operation-comment") : ("#" + (j + 1))
-              )
-            );
-            return;
-          }
-        }
-      }
+  // check for duplicate tool numbers
+  for (var i = 0; i < getNumberOfSections(); ++i) {
+    var sectioni = getSection(i);
+    var tooli = sectioni.getTool();
+    for (var j = i + 1; j < getNumberOfSections(); ++j) {
+	  var sectionj = getSection(j);
+	  var toolj = sectionj.getTool();
+	  if (tooli.number == toolj.number) {
+	    if (xyzFormat.areDifferent(tooli.diameter, toolj.diameter) ||
+		    xyzFormat.areDifferent(tooli.cornerRadius, toolj.cornerRadius) ||
+		    abcFormat.areDifferent(tooli.taperAngle, toolj.taperAngle) ||
+		    (tooli.numberOfFlutes != toolj.numberOfFlutes)) {
+		  error(
+		    subst(
+			  localize("Using the same tool number for different cutter geometry for operation '%1' and '%2'."),
+			  sectioni.hasParameter("operation-comment") ? sectioni.getParameter("operation-comment") : ("#" + (i + 1)),
+			  sectionj.hasParameter("operation-comment") ? sectionj.getParameter("operation-comment") : ("#" + (j + 1))
+		    )
+		  );
+		  return;
+	    }
+	  }
     }
   }
 
@@ -353,9 +348,6 @@ function onOpen() {
   // absolute coordinates and feed per min
   writeBlock(gFormat.format(0), gAbsIncModal.format(90), gFeedModeModal.format(94),  gFormat.format(40), gFormat.format(80), gFormat.format(64));
 
-  // writeBlock(gFeedModeModal.format(94), gFormat.format(49));   ELS2017 - Moved G94 to line above, G49 redundant with G100 tool change
-  // ELS2017 - Need to investigate G69, cancel WCS rotation for possible inclusion in preamble
-
 /*  switch (unit) {
   case IN:
     writeBlock(gUnitModal.format(20));
@@ -363,7 +355,7 @@ function onOpen() {
   case MM:
     writeBlock(gUnitModal.format(21));
     break;
-  }*/                                       //ELS2017 removed units with comment block
+  }*/
 }
 
 function onComment(message) {
@@ -664,7 +656,7 @@ function onSection() {
 
   var retracted = false; // specifies that the tool has been retracted to the safe plane
   var newWorkOffset = isFirstSection() ||
-    (getPreviousSection().workOffset != currentSection.workOffset); // work offset changes
+    (getPreviousSection().workOffset != currentSection.workOffset); // work offset changed
   var newWorkPlane = isFirstSection() ||
     !isSameDirection(getPreviousSection().getGlobalFinalToolAxis(), currentSection.getGlobalInitialToolAxis());
   if (insertToolCall || newWorkOffset || newWorkPlane) {
@@ -674,7 +666,6 @@ function onSection() {
       onCommand(COMMAND_STOP_SPINDLE);
     }
 
-	// ELS2017 - Moved Coolant Off (M09) and Optional Stop (M01) here, prior to section/operation break
 	onCommand(COMMAND_COOLANT_OFF);		
 	
     if (!isFirstSection() && properties.optionalStop) {
@@ -699,7 +690,7 @@ function onSection() {
     }
   }
 
-  if (properties.showNotes && hasParameter("notes")) {
+  if (properties.writeNotes && hasParameter("notes")) {
     var notes = getParameter("notes");
     if (notes) {
       var lines = String(notes).split("\n");
@@ -714,11 +705,9 @@ function onSection() {
     }
   }
 
-
-// ELS2017 - Add Optional Safe Start for all operatations
-	if (properties.safeStartAllOperations && !isFirstSection()) {	
-		writeBlock(gFormat.format(0), gAbsIncModal.format(90), gFeedModeModal.format(94),  gFormat.format(40), gFormat.format(80), gFormat.format(64));
-	}
+  if (properties.safeStartAllOperations && !isFirstSection()) {	
+    writeBlock(gFormat.format(0), gAbsIncModal.format(90), gFeedModeModal.format(94),  gFormat.format(40), gFormat.format(80), gFormat.format(64));
+  }
 
   // wcs
   if (insertToolCall) { // force work offset when changing tool
@@ -734,7 +723,7 @@ function onSection() {
 	if(!properties.useExtWCS){
 	    if (workOffset > 6) {
 	      var p = workOffset - 6; // 1->...
-	      if (p > 48) {					// ELS2017 - Change 300 to 48, max extended WCS G54 Pnn for Brother
+	      if (p > 48) {
 		error(localize("Work offset out of range."));
 		return;
 	      } else {
@@ -793,11 +782,6 @@ function onSection() {
     forceWorkPlane();
 
     retracted = true;
-    //onCommand(COMMAND_COOLANT_OFF);			ELS2017 - Moved M09 M01 to end of Section instead of beginning of next
-
-    //if (!isFirstSection() && properties.optionalStop) {
-    //  onCommand(COMMAND_OPTIONAL_STOP);
-    //}
 
     if (tool.number > 99) {
       warning(localize("Tool number exceeds maximum value."));
@@ -818,9 +802,6 @@ function onSection() {
   
     var start = getFramePosition(currentSection.getInitialPosition());
 
-	// ELS2017 - Add Tool Check, if a Tap, do not start spindle, handled by Tapping Cycle
-	
-
 	if (getToolTypeName(tool.type) == "right hand tap" || getToolTypeName(tool.type) == "left hand tap" ) {
 		writeBlock(gFormat.format(100),
 			"T" + toolFormat.format(tool.number),
@@ -829,7 +810,7 @@ function onSection() {
 			zOutput.format(start.z),
 			gFormat.format(43),
 			hFormat.format(tool.lengthOffset)
-			//dFormat.format(tool.diameterOffset),			ELS2017 - Remove Tool Diamether Offset, not used in G100 Tool Change
+			// Tool diamether offset not used in G100 tool change
 			  
 		);
 	}else {
@@ -840,9 +821,9 @@ function onSection() {
 			zOutput.format(start.z),
 			gFormat.format(43),
 			hFormat.format(tool.lengthOffset),
-			//dFormat.format(tool.diameterOffset),			ELS2017 - Remove Tool Diamether Offset, not used in G100 Tool Change
 			sOutput.format(tool.spindleRPM),
 			mFormat.format(tool.clockwise ? 3 : 4)
+			// Tool diamether offset not used in G100 tool change
 		);
 	}
 
@@ -879,31 +860,37 @@ function onSection() {
         }
       }
     }
-  }else			//ELS  - Add spindle speed or direction change
+  }else {
 
-	if( (rpmFormat.areDifferent(tool.spindleRPM, sOutput.getCurrent())) ||
-      (tool.clockwise != getPreviousSection().getTool().clockwise)) {
+	if((rpmFormat.areDifferent(tool.spindleRPM, sOutput.getCurrent())) ||
+      (tool.clockwise != getPreviousSection().getTool().clockwise) ||
+	  forceSpindleSpeed) {
 
+        forceSpindleSpeed = false;
+		
 		if (tool.spindleRPM < 0) {
-		error(localize("Spindle speed out of range."));
-		return;
+		  error(localize("Spindle speed out of range."));
+		  return;
 		}
 		if (tool.spindleRPM > 99999) {
-		warning(localize("Spindle speed exceeds maximum value."));
+		  warning(localize("Spindle speed exceeds maximum value."));
 		}
 		
-		if( (tool.clockwise != getPreviousSection().getTool().clockwise)  ) {			//STOP Spindle before direction change
-			onCommand(COMMAND_STOP_SPINDLE);
+		if((tool.clockwise != getPreviousSection().getTool().clockwise)) {			//STOP Spindle before direction change
+		  onCommand(COMMAND_STOP_SPINDLE);
 		}
+		
 		writeBlock(	sOutput.format(tool.spindleRPM),
-				mFormat.format(tool.clockwise ? 3 : 4)
+		  mFormat.format(tool.clockwise ? 3 : 4)
 		);
 	}
-    onCommand(COMMAND_START_CHIP_TRANSPORT);
-    if (forceMultiAxisIndexing || !is3D() || machineConfiguration.isMultiAxisConfiguration()) {
-      // writeBlock(mFormat.format(xxx)); // shortest path traverse
-    }
-
+  }
+    
+  onCommand(COMMAND_START_CHIP_TRANSPORT);
+  
+  if (forceMultiAxisIndexing || !is3D() || machineConfiguration.isMultiAxisConfiguration()) {
+    // writeBlock(mFormat.format(xxx)); // shortest path traverse
+  }
 
   forceXYZ();
 
@@ -944,9 +931,6 @@ function onSection() {
     }
 
     gMotionModal.reset();
-	if(!properties.useA00Interpolation){				// ELS2017 - Make G17 Optional
-    		writeBlock(gPlaneModal.format(17));
-	}
 
     if (!machineConfiguration.isHeadConfiguration()) {
       writeBlock(
@@ -1004,9 +988,7 @@ function onSpindleSpeed(spindleSpeed) {
 }
 
 function onCycle() {
-	if(!properties.useA00Interpolation){				// ELS2017 - Make G17 Optional
-    		writeBlock(gPlaneModal.format(17));
-	}
+
 }
 
 function getCommonCycle(x, y, z, r) {
@@ -1085,8 +1067,7 @@ function onCyclePoint(x, y, z) {
         gCycleModal.format((tool.type == TOOL_TAP_LEFT_HAND) ? 78 : 77),
         getCommonCycle(x, y, cycle.bottom, cycle.retract),
 
-	// ELS2017 - Revise Tapping Cycle to use pitch
-	(unit == MM ? "I" : "J") + xyzFormat.format(IJ),	//  ELS2017 - Use Pitch for MM, TPI for Inch mode
+	(unit == MM ? "I" : "J") + xyzFormat.format(IJ),
 	sOutput.format(tool.spindleRPM),
 	"L" + (tool.spindleRPM) * 1.2
       );
@@ -1124,14 +1105,14 @@ function onCyclePoint(x, y, z) {
       }
 
       writeBlock(
-        gCycleModal.format((tool.type == TOOL_TAP_LEFT_HAND ? 78 : 77)),		// ELS2017 Brother uses G78 for LH Tap w/ Chip Break
+        gCycleModal.format((tool.type == TOOL_TAP_LEFT_HAND ? 78 : 77)),
         getCommonCycle(x, y, z, cycle.retract),
-        //"P" + milliFormat.format(P),										// ELS2017 Dwell Not used on G77/G78
+        //"P" + milliFormat.format(P),
         "Q" + xyzFormat.format(cycle.incrementalDepth),
-	(unit == MM ? "I" : "J") + xyzFormat.format(IJ),		//  ELS2017 - Use Pitch for MM, TPI for Inch mode
+	(unit == MM ? "I" : "J") + xyzFormat.format(IJ),
 	sOutput.format(tool.spindleRPM),
-        //feedOutput.format(F)								//  ELS2017 - F(feed) not used with G77/G78
-		"L" + ((tool.spindleRPM) * 1.2)						// ELS2017 - 20% Overspeed for Retract
+        //feedOutput.format(F)
+		"L" + ((tool.spindleRPM) * 1.2)
       );
       break;
     case "fine-boring":
@@ -1257,34 +1238,18 @@ function onLinear(_x, _y, _z, feed) {
       if (d > 99) {
         warning(localize("The diameter offset exceeds the maximum value."));
       }
-	if(!properties.useA00Interpolation){				// ELS2017 - Make G17 Optional
-    		writeBlock(gPlaneModal.format(17));
-	}
       
-// ELS2017 - Use AIII High Accuracy Mode (C00 control?) when User Parameter is True and Cutter Comp is used.
 	switch (radiusCompensation) {
       case RADIUS_COMPENSATION_LEFT:
         dOutput.reset();
-		if(properties.useAiiiCutterComp){
-			writeBlock(gMotionModal.format(1), gFormat.format(41), dOutput.format(d), x, y, z, f, mFormat.format(260));
-		}else{
-        		writeBlock(gMotionModal.format(1), gFormat.format(41), dOutput.format(d), x, y, z, f);
-		}
+		writeBlock(gMotionModal.format(1), gFormat.format(41), dOutput.format(d), x, y, z, f);
         break;
       case RADIUS_COMPENSATION_RIGHT:
         dOutput.reset();
-		if(properties.useAiiiCutterComp){
-			writeBlock(gMotionModal.format(1), gFormat.format(42), dOutput.format(d), x, y, z, f, mFormat.format(260));
-		}else{
-        		writeBlock(gMotionModal.format(1), gFormat.format(42), dOutput.format(d), x, y, z,  f);
-		}
+		writeBlock(gMotionModal.format(1), gFormat.format(42), dOutput.format(d), x, y, z,  f);
         break;
       default:
-		if(properties.useAiiiCutterComp){
-			writeBlock(gMotionModal.format(1), gFormat.format(40), x, y, z, f, mFormat.format(269));
-		}else{
-        		writeBlock(gMotionModal.format(1), gFormat.format(40), x, y, z, f);
-		}
+		writeBlock(gMotionModal.format(1), gFormat.format(40), x, y, z, f);
       }
     } else {
       writeBlock(gMotionModal.format(1), x, y, z, f);
@@ -1381,67 +1346,30 @@ function onCircular(clockwise, cx, cy, cz, x, y, z, feed) {
       linearize(tolerance);
       return;
     }
-
-//	if(!properties.useA00Interpolation){				// ELS2017 - Make G17 Optional
-//    		writeBlock(gPlaneModal.format(17));
-//	}
-
-
-    switch (getCircularPlane()) {       //ELS2017 - Now with optional CircularPlane A00 Interpolation
+    switch (getCircularPlane()) {
     case PLANE_XY:
-		if(properties.useA00Interpolation){				// ELS2017 - Make G17 Optional
-			writeBlock(gAbsIncModal.format(90), gMotionModal.format(clockwise ? 2 : 3), iOutput.format(cx - start.x, 0), jOutput.format(cy - start.y, 0), getFeed(feed));
-			break;		
-		}else{
-			writeBlock(gAbsIncModal.format(90), gPlaneModal.format(17), gMotionModal.format(clockwise ? 2 : 3), iOutput.format(cx - start.x, 0), jOutput.format(cy - start.y, 0), getFeed(feed));
-			break;
-		}
+      writeBlock(gAbsIncModal.format(90), gMotionModal.format(clockwise ? 2 : 3), iOutput.format(cx - start.x, 0), jOutput.format(cy - start.y, 0), getFeed(feed));
+      break;		
     case PLANE_ZX:
-		if(properties.useA00Interpolation){				// ELS2017 - Make G18 Optional
-			writeBlock(gAbsIncModal.format(90), gMotionModal.format(clockwise ? 102 : 103), iOutput.format(cx - start.x, 0), kOutput.format(cz - start.z, 0), getFeed(feed));
-      		break;		
-		}else{
-			writeBlock(gAbsIncModal.format(90), gPlaneModal.format(18), gMotionModal.format(clockwise ? 2 : 3), iOutput.format(cx - start.x, 0), kOutput.format(cz - start.z, 0), getFeed(feed));
-      		break;
-			
-		}
+      writeBlock(gAbsIncModal.format(90), gMotionModal.format(clockwise ? 102 : 103), iOutput.format(cx - start.x, 0), kOutput.format(cz - start.z, 0), getFeed(feed));
+      break;		
     case PLANE_YZ:
-		if(properties.useA00Interpolation){				// ELS2017 - Make G19 Optional
-			writeBlock(gAbsIncModal.format(90), gMotionModal.format(clockwise ? 202 : 203), jOutput.format(cy - start.y, 0), kOutput.format(cz - start.z, 0), getFeed(feed));
-      		break;			
-		}else{
-			writeBlock(gAbsIncModal.format(90), gPlaneModal.format(19), gMotionModal.format(clockwise ? 2 : 3), xOutput.format(x), yOutput.format(y), zOutput.format(z), jOutput.format(cy - start.y, 0), kOutput.format(cz - start.z, 0), getFeed(feed));
-      		break;
-		}
+      writeBlock(gAbsIncModal.format(90), gMotionModal.format(clockwise ? 202 : 203), jOutput.format(cy - start.y, 0), kOutput.format(cz - start.z, 0), getFeed(feed));
+      break;
     default:
       linearize(tolerance);
     }
-  } else if (!properties.useRadius) {       //ELS2017 - Changes continue credit:LW-3D
+  } else if (!properties.useRadius) {
     switch (getCircularPlane()) {
     case PLANE_XY:
-		if(properties.useA00Interpolation){				// ELS2017 - Make G17 Optional
-			writeBlock(gAbsIncModal.format(90), gMotionModal.format(clockwise ? 2 : 3), xOutput.format(x), yOutput.format(y), zOutput.format(z), iOutput.format(cx - start.x, 0), jOutput.format(cy - start.y, 0), getFeed(feed));
-      		break;		
-		}else{
-			writeBlock(gAbsIncModal.format(90), gPlaneModal.format(17), gMotionModal.format(clockwise ? 2 : 3), xOutput.format(x), yOutput.format(y), zOutput.format(z), iOutput.format(cx - start.x, 0), jOutput.format(cy - start.y, 0), getFeed(feed));
-      		break;
-		}
+      writeBlock(gAbsIncModal.format(90), gMotionModal.format(clockwise ? 2 : 3), xOutput.format(x), yOutput.format(y), zOutput.format(z), iOutput.format(cx - start.x, 0), jOutput.format(cy - start.y, 0), getFeed(feed));
+      break;		
     case PLANE_ZX:
-		if(properties.useA00Interpolation){				// ELS2017 - Make G18 Optional
-			writeBlock(gAbsIncModal.format(90), gMotionModal.format(clockwise ? 102 : 103), xOutput.format(x), yOutput.format(y), zOutput.format(z), iOutput.format(cx - start.x, 0), kOutput.format(cz - start.z, 0), getFeed(feed));
-      		break;		
-		}else{
-			writeBlock(gAbsIncModal.format(90), gPlaneModal.format(18), gMotionModal.format(clockwise ? 2 : 3), xOutput.format(x), yOutput.format(y), zOutput.format(z), iOutput.format(cx - start.x, 0), kOutput.format(cz - start.z, 0), getFeed(feed));
-      		break;
-		}
+      writeBlock(gAbsIncModal.format(90), gMotionModal.format(clockwise ? 102 : 103), xOutput.format(x), yOutput.format(y), zOutput.format(z), iOutput.format(cx - start.x, 0), kOutput.format(cz - start.z, 0), getFeed(feed));
+      break;		
     case PLANE_YZ:
-		if(properties.useA00Interpolation){				// ELS2017 - Make G19 Optional
-			writeBlock(gAbsIncModal.format(90), gMotionModal.format(clockwise ? 202 : 203), xOutput.format(x), yOutput.format(y), zOutput.format(z), jOutput.format(cy - start.y, 0), kOutput.format(cz - start.z, 0), getFeed(feed));
-      		break;		
-		}else{
-			writeBlock(gAbsIncModal.format(90), gPlaneModal.format(19), gMotionModal.format(clockwise ? 2 : 3), xOutput.format(x), yOutput.format(y), zOutput.format(z), jOutput.format(cy - start.y, 0), kOutput.format(cz - start.z, 0), getFeed(feed));
-      		break;
-		}
+      writeBlock(gAbsIncModal.format(90), gMotionModal.format(clockwise ? 202 : 203), xOutput.format(x), yOutput.format(y), zOutput.format(z), jOutput.format(cy - start.y, 0), kOutput.format(cz - start.z, 0), getFeed(feed));
+      break;		
     default:
       linearize(tolerance);
     }
@@ -1450,31 +1378,16 @@ function onCircular(clockwise, cx, cy, cz, x, y, z, feed) {
     if (toDeg(getCircularSweep()) > 180) {
       r = -r; // allow up to <360 deg arcs
     }
-    switch (getCircularPlane()) {       //ELS2017 - Last of Circular Planar credit:LW-3D
+    switch (getCircularPlane()) {
     case PLANE_XY:
-		if(properties.useA00Interpolation){				// ELS2017 - Make G17 Optional
-			writeBlock(gMotionModal.format(clockwise ? 2 : 3), xOutput.format(x), yOutput.format(y), zOutput.format(z), "R" + rFormat.format(r), getFeed(feed));
-      		break;		
-		}else{
-			writeBlock(gPlaneModal.format(17), gMotionModal.format(clockwise ? 2 : 3), xOutput.format(x), yOutput.format(y), zOutput.format(z), "R" + rFormat.format(r), getFeed(feed));
-      		break;
-		}
+      writeBlock(gMotionModal.format(clockwise ? 2 : 3), xOutput.format(x), yOutput.format(y), zOutput.format(z), "R" + rFormat.format(r), getFeed(feed));
+      break;		
     case PLANE_ZX:
-		if(properties.useA00Interpolation){				// ELS2017 - Make G17 Optional
-			writeBlock(gMotionModal.format(clockwise ? 102 : 103), xOutput.format(x), yOutput.format(y), zOutput.format(z), "R" + rFormat.format(r), getFeed(feed));
-      		break;		
-		}else{
-			writeBlock(gPlaneModal.format(18), gMotionModal.format(clockwise ? 2 : 3), xOutput.format(x), yOutput.format(y), zOutput.format(z), "R" + rFormat.format(r), getFeed(feed));
-      		break;
-		}
+      writeBlock(gMotionModal.format(clockwise ? 102 : 103), xOutput.format(x), yOutput.format(y), zOutput.format(z), "R" + rFormat.format(r), getFeed(feed));
+      break;		
     case PLANE_YZ:
-		if(properties.useA00Interpolation){				// ELS2017 - Make G17 Optional
-			writeBlock(gMotionModal.format(clockwise ? 202 : 203), xOutput.format(x), yOutput.format(y), zOutput.format(z), "R" + rFormat.format(r), getFeed(feed));
-      		break;		
-		}else{
-			writeBlock(gPlaneModal.format(19), gMotionModal.format(clockwise ? 2 : 3), xOutput.format(x), yOutput.format(y), zOutput.format(z), "R" + rFormat.format(r), getFeed(feed));
-      		break;
-		}
+      writeBlock(gMotionModal.format(clockwise ? 202 : 203), xOutput.format(x), yOutput.format(y), zOutput.format(z), "R" + rFormat.format(r), getFeed(feed));
+      break;		
     default:
       linearize(tolerance);
     }
@@ -1489,7 +1402,7 @@ function setCoolant(coolant) {
   }
 
   if (coolant == COOLANT_OFF) {
-    writeBlock(mFormat.format((currentCoolantMode == COOLANT_THROUGH_TOOL) ? 495 : 9));  // ELS2017 - Change M89 to M495 for TSC Off
+    writeBlock(mFormat.format((currentCoolantMode == COOLANT_THROUGH_TOOL) ? 495 : 9));
     currentCoolantMode = COOLANT_OFF;
     return;
   }
@@ -1500,7 +1413,7 @@ function setCoolant(coolant) {
     m = 8;
     break;
   case COOLANT_THROUGH_TOOL:
-    m = 494;                    //ELS2017 - Change M88 to M494 for TSC, M88 not supported by Brother Control
+    m = 494;
     break;
   default:
     onUnsupportedCoolant(coolant);
@@ -1539,6 +1452,10 @@ function onCommand(command) {
     writeBlock(mFormat.format(0));
     forceSpindleSpeed = true;
     return;
+  case COMMAND_OPTIONAL_STOP:
+    writeBlock(mFormat.format(1));
+    forceSpindleSpeed = true;
+	return;
   case COMMAND_START_SPINDLE:
     onCommand(tool.clockwise ? COMMAND_SPINDLE_CLOCKWISE : COMMAND_SPINDLE_COUNTERCLOCKWISE);
     return;
@@ -1550,7 +1467,7 @@ function onCommand(command) {
     return;
   case COMMAND_STOP_CHIP_TRANSPORT:
     return;
- 
+  case COMMAND_BREAK_CONTROL:
     return;
   case COMMAND_TOOL_MEASURE:
     return;
@@ -1570,9 +1487,6 @@ function onSectionEnd() {
     writeBlock(gFormat.format(49));
   }
   setSmoothing(false);
-	if(!properties.useA00Interpolation){				// ELS2017 - Make G17 Optional
-    		writeBlock(gPlaneModal.format(17));
-	}
 
   if (((getCurrentSectionId() + 1) >= getNumberOfSections()) ||
       (tool.number != getNextSection().getTool().number)) {
@@ -1590,10 +1504,9 @@ function onClose() {
 
   onCommand(COMMAND_COOLANT_OFF);
 
-//  ELS2017 - Add optional Spindle Retract using G28 G91 Z0
-	if(properties.endSpindleHome) {
-		writeBlock(gFormat.format(28), gAbsIncModal.format(91), "Z" + xyzFormat.format(0));  	// retract
-	}
+  if(properties.endSpindleHome) {
+    writeBlock(gFormat.format(28), gAbsIncModal.format(91), "Z" + xyzFormat.format(0));  	// retract
+  }
 	
   zOutput.reset();
 
@@ -1601,14 +1514,10 @@ function onClose() {
   var firstToolNumber = section.getTool().number;
 
   writeBlock(gFormat.format(100), "T" + toolFormat.format(firstToolNumber));
-//ELS2017 - Change XY End Position to 0,0 for machine compatibility on smaller machines.
-//  writeBlock(gFormat.format(53), "X" + xyzFormat.format(0), "Y" + xyzFormat.format(0)); // TAG: is this position the default position on Brother machines?
-
+  
   setWorkPlane(new Vector(0, 0, 0)); // reset working plane
-
- //   ELS2017 -   Add Home Position Center
  
-  if (properties.homePositionCenter &&
+  if (properties.endCenterPart &&
       hasParameter("part-upper-x") && hasParameter("part-lower-x")) {
     var xCenter = (getParameter("part-upper-x") + getParameter("part-lower-x"))/2;
     writeBlock(gMotionModal.format(0), "X" + xyzFormat.format(xCenter)); // only desired when X is in the table
@@ -1629,22 +1538,18 @@ function onClose() {
     writeBlock(gAbsIncModal.format(90), gFormat.format(53), gMotionModal.format(0), homeX, homeY);
   }
 
-  
-  //  ELS2017 - Added Chip Shower Flush at End of Cycle, set Duration in User Parameters
-  
-  if(properties.useChipShower) {
-		if (properties.includePostWarnings) {
-			writeln("(SET CHIP SHOWER M400/M401 DURATION IN USER PARAMETERS)"); 
-		}
-        writeBlock(mFormat.format(400));
-        writeBlock(mFormat.format(401));
+  if(properties.endChipShower) {
+    if (properties.includePostWarnings) {
+      writeln("(SET CHIP SHOWER M400/M401 DURATION IN USER PARAMETERS)"); 
+    }
+    writeBlock(mFormat.format(400));
+    writeBlock(mFormat.format(401));
   }
   onImpliedCommand(COMMAND_END);
   onImpliedCommand(COMMAND_STOP_SPINDLE);
   writeBlock(mFormat.format(30)); // stop program, spindle stop, coolant off
 	
-	if(properties.writeFileTransfer){		
-	  writeln("%");
-	}
-  
+  if(properties.writeFileTransfer){		
+    writeln("%");
+  }
 }

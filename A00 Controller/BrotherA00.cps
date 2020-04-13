@@ -561,9 +561,9 @@ function setWorkPlane(abc) {
   }
 
   if (!((currentWorkPlaneABC == undefined) ||
-        abcFormat.areDifferent(abc.x, currentWorkPlaneABC.x) ||
-        abcFormat.areDifferent(abc.y, currentWorkPlaneABC.y) ||
-        abcFormat.areDifferent(abc.z, currentWorkPlaneABC.z))) {
+      abcFormat.areDifferent(abc.x, currentWorkPlaneABC.x) ||
+      abcFormat.areDifferent(abc.y, currentWorkPlaneABC.y) ||
+      abcFormat.areDifferent(abc.z, currentWorkPlaneABC.z))) {
     return; // no change
   }
 
@@ -720,35 +720,35 @@ function onSection() {
   }
   if (workOffset > 0) {
 	if(!properties.useExtWCS){
-	    if (workOffset > 6) { // If work offset is greater than 6 (i.e. greater than G59), then we HAVE to use extended WCS, even if the setting is false.
-	      var p = workOffset - 6; // 1->...
-	      if (p > 48) {
-		error(localize("Work offset out of range."));
-		return;
-	      } else {
-		if (workOffset != currentWorkOffset) {
-		  writeBlock(gFormat.format(54.1), "P" + p); 	// G54.1P
-		  currentWorkOffset = workOffset;
-		}
-	      }
-	    } else {
-	      if (workOffset != currentWorkOffset) {
-		writeBlock(gFormat.format(53 + workOffset)); // G54->G59
-		currentWorkOffset = workOffset;
-	      }
-	    }
-	}else{
-        var p = workOffset;
-        if (p > 48) {            				
-            error(localize("Work offset out of range."));
-            return;
+      if (workOffset > 6) { // If work offset is greater than 6 (i.e. greater than G59), then we HAVE to use extended WCS, even if the setting is false.
+        var p = workOffset - 6; // 1->...
+        if (p > 48) {
+          error(localize("Work offset out of range."));
+          return;
         } else {
-            if (workOffset != currentWorkOffset) {
-                writeBlock(gFormat.format(54.1), "P" + p); 	// G54.1P  
-                currentWorkOffset = workOffset;
-            }
+          if (workOffset != currentWorkOffset) {
+            writeBlock(gFormat.format(54.1), "P" + p); 	// G54.1P
+            currentWorkOffset = workOffset;
+          }
         }
-     } 
+      } else {
+        if (workOffset != currentWorkOffset) {
+          writeBlock(gFormat.format(53 + workOffset)); // G54->G59
+          currentWorkOffset = workOffset;
+        }
+      }
+	}else{
+      var p = workOffset;
+      if (p > 48) {            				
+        error(localize("Work offset out of range."));
+        return;
+      } else {
+        if (workOffset != currentWorkOffset) {
+          writeBlock(gFormat.format(54.1), "P" + p); 	// G54.1P  
+          currentWorkOffset = workOffset;
+        }
+      }
+    } 
   }
 
   if (forceMultiAxisIndexing || !is3D() || machineConfiguration.isMultiAxisConfiguration()) { // use 5-axis indexing for multi-axis mode
@@ -800,28 +800,27 @@ function onSection() {
     var start = getFramePosition(currentSection.getInitialPosition());
 
 	if (getToolTypeName(tool.type) == "right hand tap" || getToolTypeName(tool.type) == "left hand tap" ) {
-		writeBlock(gFormat.format(100),
-			"T" + toolFormat.format(tool.number),
-			xOutput.format(start.x),
-			yOutput.format(start.y),
-			zOutput.format(start.z),
-			gFormat.format(43),
-			hFormat.format(tool.lengthOffset)
-			// Tool diamether offset not used in G100 tool change
-			  
-		);
+      writeBlock(gFormat.format(100),
+        "T" + toolFormat.format(tool.number),
+        xOutput.format(start.x),
+        yOutput.format(start.y),
+        zOutput.format(start.z),
+        gFormat.format(43),
+        hFormat.format(tool.lengthOffset)
+        // Tool diamether offset not used in G100 tool change
+      );
 	}else {
-		writeBlock(gFormat.format(100),
-			"T" + toolFormat.format(tool.number),
-			xOutput.format(start.x),
-			yOutput.format(start.y),
-			zOutput.format(start.z),
-			gFormat.format(43),
-			hFormat.format(tool.lengthOffset),
-			sOutput.format(tool.spindleRPM),
-			mFormat.format(tool.clockwise ? 3 : 4)
-			// Tool diamether offset not used in G100 tool change
-		);
+      writeBlock(gFormat.format(100),
+        "T" + toolFormat.format(tool.number),
+        xOutput.format(start.x),
+        yOutput.format(start.y),
+        zOutput.format(start.z),
+        gFormat.format(43),
+        hFormat.format(tool.lengthOffset),
+        sOutput.format(tool.spindleRPM),
+        mFormat.format(tool.clockwise ? 3 : 4)
+        // Tool diamether offset not used in G100 tool change
+      );
 	}
 
     if (tool.comment) {
@@ -873,7 +872,7 @@ function onSection() {
 		  warning(localize("Spindle speed exceeds maximum value."));
 		}
 		
-		if((tool.clockwise != getPreviousSection().getTool().clockwise)) {			//STOP Spindle before direction change
+		if((tool.clockwise != getPreviousSection().getTool().clockwise)) { //STOP Spindle before direction change
 		  onCommand(COMMAND_STOP_SPINDLE);
 		}
 		
@@ -984,9 +983,7 @@ function onSpindleSpeed(spindleSpeed) {
   writeBlock(sOutput.format(spindleSpeed));
 }
 
-function onCycle() {
-
-}
+function onCycle() {}
 
 function getCommonCycle(x, y, z, r) {
   forceXYZ(); // force xyz on first drill hole of any cycle
@@ -1004,7 +1001,6 @@ function onCyclePoint(x, y, z) {
     var F = cycle.feedrate;
     var P = (cycle.dwell == 0) ? 0 : clamp(1, cycle.dwell * 1000, 99999999); // in milliseconds
 	var IJ = ((unit == MM) ? tool.getThreadPitch() : 1/tool.getThreadPitch());		//Variable to handle Pitch/TPI for MM/Inch mode
-
 
     switch (cycleType) {
     case "drilling":
@@ -1487,9 +1483,9 @@ function onSectionEnd() {
 
   if (((getCurrentSectionId() + 1) >= getNumberOfSections()) ||
       (tool.number != getNextSection().getTool().number)) {
-    		if (properties.useBreakControl) {
-            	onCommand(COMMAND_BREAK_CONTROL);
-        }
+    if (properties.useBreakControl) {
+      onCommand(COMMAND_BREAK_CONTROL);
+    }
   }
 
   forceAny();

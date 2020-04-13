@@ -719,9 +719,8 @@ function onSection() {
     workOffset = 1;
   }
   if (workOffset > 0) {
-
 	if(!properties.useExtWCS){
-	    if (workOffset > 6) {
+	    if (workOffset > 6) { // If work offset is greater than 6 (i.e. greater than G59), then we HAVE to use extended WCS, even if the setting is false.
 	      var p = workOffset - 6; // 1->...
 	      if (p > 48) {
 		error(localize("Work offset out of range."));
@@ -739,20 +738,18 @@ function onSection() {
 	      }
 	    }
 	}else{
-			var p = workOffset;
-		      	if (p > 48) {            				
-				error(localize("Work offset out of range."));
-				return;
-		      	} else {
-				if (workOffset != currentWorkOffset) {
-				  	writeBlock(gFormat.format(54.1), "P" + p); 	// G54.1P  
-				  	currentWorkOffset = workOffset;
-				}
-
-	  		}
-
-		} 
-	}
+        var p = workOffset;
+        if (p > 48) {            				
+            error(localize("Work offset out of range."));
+            return;
+        } else {
+            if (workOffset != currentWorkOffset) {
+                writeBlock(gFormat.format(54.1), "P" + p); 	// G54.1P  
+                currentWorkOffset = workOffset;
+            }
+        }
+     } 
+  }
 
   if (forceMultiAxisIndexing || !is3D() || machineConfiguration.isMultiAxisConfiguration()) { // use 5-axis indexing for multi-axis mode
     if (currentSection.isMultiAxis()) {

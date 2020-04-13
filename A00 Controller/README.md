@@ -1,6 +1,6 @@
-## A00 Post ##
+## A00 Post Processor ##
 
-### Explanataion of variables: ###
+### Explanation of variables: ###
 **8 digit program number** - Specifies that an 8 digit program number is needed.
 
 **Write machine settings** - Output the machine settings in the header of the code.

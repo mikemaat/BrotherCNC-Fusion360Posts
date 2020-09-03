@@ -33,7 +33,7 @@ allowedCircularPlanes = undefined; // allow any circular motion
 properties = {
   writeMachine: true, // Write machine
   writeTools: true, // Writes the tools
-  preloadTool: true, // Preloads next tool on tool change if any
+  //preloadTool: true, // Preloads next tool on tool change if any
   showLineNumbers: true, // Show line numbers
   lineNumberStart: 10, // First sequence number
   lineNumberIncrement: 5, // Increment for sequence numbers
@@ -49,7 +49,8 @@ properties = {
   safeStartAllOperations: false, // Write optional blocks at the beginning of all operations that include all commands to start program
   endChipShower: false, // Run Chip Shower M400/M401 at end of cycle.
   endSpindleHome: false, // Use G28 G91 Z0 at end of program to return spindle to home
-  endCenterPart: true,  // Moves the part in X in center under spindle at end of program (ONLY WORKS IF THE TABLE IS MOVING)
+  positionAtEnd: "home",  // Moves the part in X in center under spindle at end of program (ONLY WORKS IF THE TABLE IS MOVING)
+  preloadFirstToolAtEnd: true, // Preload the first tool at program end to prepare for the next run
   includePostWarnings: true // Include post warnings (i.e. G20 unit parameter set in machine, M400 time, etc.) in the generated output
 };
 
@@ -68,11 +69,16 @@ propertyDefinitions = {
   lineNumberIncrement: {title:"Line number increment", description:"The amount by which the line number is incremented by in each block.", group:3, type:"integer"},
   separateWordsWithSpace: {title:"Separate words with space", description:"Adds spaces between words if 'yes' is selected.", type:"boolean"},
   safeStartAllOperations: {title:"Safe start all operations", description:"Include safe start preamble for all operations.", type:"boolean"},
-  preloadTool: {title:"Preload next tool", description:"Preloads the next tool at a tool change (if any).", type:"boolean"},
+  //preloadTool: {title:"Preload next tool", description:"Preloads the next tool at a tool change (if any).", type:"boolean"},
   optionalStop: {title:"Automatic optional stop", description:"Automatically outputs optional stop after each operation.", type:"boolean"},
   endChipShower: {title:"Chip shower at end", description:"Run chip shower (M400/M401) at end of the cycle.", type:"boolean"},
   endSpindleHome: {title:"Return spindle home at end", description:"Return spindle to home at end of the cycle with G28 G91 Z0.", type:"boolean"},
-  endCenterPart: {title:"Center part at end", description:"Enable to center the part along X at the end of program for easy access. Requires a CNC with a moving table.", type:"boolean"},
+  positionAtEnd: {title:"Part position at end", description:"Position of the part at the program end. Requires a CNC with a moving table.", type:"enum", values:[
+      {title:"Home", id:"home"},
+      {title:"No Move", id:"noMove"},
+      {title:"Center at Door", id:"centerAtDoor"}
+    ]},
+  preloadFirstToolAtEnd: {title:"Preload first tool at end", description:"Preloads the first tool at the end of the program to ready for the next run.", type:"boolean"},
   includePostWarnings: {title:"Include post warnings", description:"Include post warnings (i.e. G20 unit parameter set in machine, M400 time, etc.) in the generated output.", type:"boolean"},
   writeFileTransfer: {title:"Add (%) for file transfer", description:"Specifies whether to write leading and trailing % for file transfer.", type:"boolean"},
 };
@@ -561,9 +567,9 @@ function setWorkPlane(abc) {
   }
 
   if (!((currentWorkPlaneABC == undefined) ||
-      abcFormat.areDifferent(abc.x, currentWorkPlaneABC.x) ||
-      abcFormat.areDifferent(abc.y, currentWorkPlaneABC.y) ||
-      abcFormat.areDifferent(abc.z, currentWorkPlaneABC.z))) {
+        abcFormat.areDifferent(abc.x, currentWorkPlaneABC.x) ||
+        abcFormat.areDifferent(abc.y, currentWorkPlaneABC.y) ||
+        abcFormat.areDifferent(abc.z, currentWorkPlaneABC.z))) {
     return; // no change
   }
 
@@ -719,37 +725,40 @@ function onSection() {
     workOffset = 1;
   }
   if (workOffset > 0) {
+
 	if(!properties.useExtWCS){
-      if (workOffset > 6) { // If work offset is greater than 6 (i.e. greater than G59), then we HAVE to use extended WCS, even if the setting is false.
-        var p = workOffset - 6; // 1->...
-        if (p > 48) {
-          error(localize("Work offset out of range."));
-          return;
-        } else {
-          if (workOffset != currentWorkOffset) {
-            writeBlock(gFormat.format(54.1), "P" + p); 	// G54.1P
-            currentWorkOffset = workOffset;
-          }
-        }
-      } else {
-        if (workOffset != currentWorkOffset) {
-          writeBlock(gFormat.format(53 + workOffset)); // G54->G59
-          currentWorkOffset = workOffset;
-        }
-      }
+	    if (workOffset > 6) {
+	      var p = workOffset - 6; // 1->...
+	      if (p > 48) {
+		error(localize("Work offset out of range."));
+		return;
+	      } else {
+		if (workOffset != currentWorkOffset) {
+		  writeBlock(gFormat.format(54.1), "P" + p); 	// G54.1P
+		  currentWorkOffset = workOffset;
+		}
+	      }
+	    } else {
+	      if (workOffset != currentWorkOffset) {
+		writeBlock(gFormat.format(53 + workOffset)); // G54->G59
+		currentWorkOffset = workOffset;
+	      }
+	    }
 	}else{
-      var p = workOffset;
-      if (p > 48) {            				
-        error(localize("Work offset out of range."));
-        return;
-      } else {
-        if (workOffset != currentWorkOffset) {
-          writeBlock(gFormat.format(54.1), "P" + p); 	// G54.1P  
-          currentWorkOffset = workOffset;
-        }
-      }
-    } 
-  }
+			var p = workOffset;
+		      	if (p > 48) {            				
+				error(localize("Work offset out of range."));
+				return;
+		      	} else {
+				if (workOffset != currentWorkOffset) {
+				  	writeBlock(gFormat.format(54.1), "P" + p); 	// G54.1P  
+				  	currentWorkOffset = workOffset;
+				}
+
+	  		}
+
+		} 
+	}
 
   if (forceMultiAxisIndexing || !is3D() || machineConfiguration.isMultiAxisConfiguration()) { // use 5-axis indexing for multi-axis mode
     if (currentSection.isMultiAxis()) {
@@ -800,27 +809,28 @@ function onSection() {
     var start = getFramePosition(currentSection.getInitialPosition());
 
 	if (getToolTypeName(tool.type) == "right hand tap" || getToolTypeName(tool.type) == "left hand tap" ) {
-      writeBlock(gFormat.format(100),
-        "T" + toolFormat.format(tool.number),
-        xOutput.format(start.x),
-        yOutput.format(start.y),
-        zOutput.format(start.z),
-        gFormat.format(43),
-        hFormat.format(tool.lengthOffset)
-        // Tool diamether offset not used in G100 tool change
-      );
+		writeBlock(gFormat.format(100),
+			"T" + toolFormat.format(tool.number),
+			xOutput.format(start.x),
+			yOutput.format(start.y),
+			zOutput.format(start.z),
+			gFormat.format(43),
+			hFormat.format(tool.lengthOffset)
+			// Tool diamether offset not used in G100 tool change
+			  
+		);
 	}else {
-      writeBlock(gFormat.format(100),
-        "T" + toolFormat.format(tool.number),
-        xOutput.format(start.x),
-        yOutput.format(start.y),
-        zOutput.format(start.z),
-        gFormat.format(43),
-        hFormat.format(tool.lengthOffset),
-        sOutput.format(tool.spindleRPM),
-        mFormat.format(tool.clockwise ? 3 : 4)
-        // Tool diamether offset not used in G100 tool change
-      );
+		writeBlock(gFormat.format(100),
+			"T" + toolFormat.format(tool.number),
+			xOutput.format(start.x),
+			yOutput.format(start.y),
+			zOutput.format(start.z),
+			gFormat.format(43),
+			hFormat.format(tool.lengthOffset),
+			sOutput.format(tool.spindleRPM),
+			mFormat.format(tool.clockwise ? 3 : 4)
+			// Tool diamether offset not used in G100 tool change
+		);
 	}
 
     if (tool.comment) {
@@ -843,19 +853,19 @@ function onSection() {
       }
     }
 
-    if (properties.preloadTool) {
-      var nextTool = getNextTool(tool.number);
-      if (nextTool) {
-        writeBlock("T" + toolFormat.format(nextTool.number));
-      } else {
+    //if (properties.preloadTool) {
+      //var nextTool = getNextTool(tool.number);
+      //if (nextTool) {
+        //writeBlock("T" + toolFormat.format(nextTool.number));
+      //} else {
         // preload first tool
-        var section = getSection(0);
-        var firstToolNumber = section.getTool().number;
-        if (tool.number != firstToolNumber) {
-          writeBlock("T" + toolFormat.format(firstToolNumber));
-        }
-      }
-    }
+        //var section = getSection(0);
+        //var firstToolNumber = section.getTool().number;
+        //if (tool.number != firstToolNumber) {
+          //writeBlock("T" + toolFormat.format(firstToolNumber));
+        //}
+      //}
+    //}
   }else {
 
 	if((rpmFormat.areDifferent(tool.spindleRPM, sOutput.getCurrent())) ||
@@ -872,7 +882,7 @@ function onSection() {
 		  warning(localize("Spindle speed exceeds maximum value."));
 		}
 		
-		if((tool.clockwise != getPreviousSection().getTool().clockwise)) { //STOP Spindle before direction change
+		if((tool.clockwise != getPreviousSection().getTool().clockwise)) {			//STOP Spindle before direction change
 		  onCommand(COMMAND_STOP_SPINDLE);
 		}
 		
@@ -983,7 +993,9 @@ function onSpindleSpeed(spindleSpeed) {
   writeBlock(sOutput.format(spindleSpeed));
 }
 
-function onCycle() {}
+function onCycle() {
+
+}
 
 function getCommonCycle(x, y, z, r) {
   forceXYZ(); // force xyz on first drill hole of any cycle
@@ -1001,6 +1013,7 @@ function onCyclePoint(x, y, z) {
     var F = cycle.feedrate;
     var P = (cycle.dwell == 0) ? 0 : clamp(1, cycle.dwell * 1000, 99999999); // in milliseconds
 	var IJ = ((unit == MM) ? tool.getThreadPitch() : 1/tool.getThreadPitch());		//Variable to handle Pitch/TPI for MM/Inch mode
+
 
     switch (cycleType) {
     case "drilling":
@@ -1475,6 +1488,13 @@ function onCommand(command) {
   }
 }
 
+function onPassThrough(text) {
+  var commands = String(text).split(",");
+  for (text in commands) {
+    writeBlock(commands[text]);
+  }
+}
+
 function onSectionEnd() {
   if (currentSection.isMultiAxis() && !currentSection.isOptimizedForMachine()) {
     writeBlock(gFormat.format(49));
@@ -1483,9 +1503,9 @@ function onSectionEnd() {
 
   if (((getCurrentSectionId() + 1) >= getNumberOfSections()) ||
       (tool.number != getNextSection().getTool().number)) {
-    if (properties.useBreakControl) {
-      onCommand(COMMAND_BREAK_CONTROL);
-    }
+    		if (properties.useBreakControl) {
+            	onCommand(COMMAND_BREAK_CONTROL);
+        }
   }
 
   forceAny();
@@ -1503,32 +1523,35 @@ function onClose() {
 	
   zOutput.reset();
 
-  var section = getSection(0);
-  var firstToolNumber = section.getTool().number;
-
-  writeBlock(gFormat.format(100), "T" + toolFormat.format(firstToolNumber));
+  if (properties.preloadFirstToolAtEnd) {
+    var section = getSection(0);
+    var firstToolNumber = section.getTool().number;
+    writeBlock(gFormat.format(100), "T" + toolFormat.format(firstToolNumber));
+  }
   
   setWorkPlane(new Vector(0, 0, 0)); // reset working plane
  
-  if (properties.endCenterPart &&
+  if (properties.positionAtEnd == "home") {
+    if (!machineConfiguration.hasHomePositionX() && !machineConfiguration.hasHomePositionY()) {
+      writeBlock(gAbsIncModal.format(90), gFormat.format(53), "X" + xyzFormat.format(0), "Y" + xyzFormat.format(0)); // return to home
+    } else {
+      var homeX;
+      if (machineConfiguration.hasHomePositionX()) {
+        homeX = "X" + xyzFormat.format(machineConfiguration.getHomePositionX());
+      }
+      var homeY;
+      if (machineConfiguration.hasHomePositionY()) {
+        homeY = "Y" + xyzFormat.format(machineConfiguration.getHomePositionY());
+      }
+      writeBlock(gAbsIncModal.format(90), gFormat.format(53), gMotionModal.format(0), homeX, homeY);
+    }
+  } else if (properties.positionAtEnd == "centerAtDoor" &&
       hasParameter("part-upper-x") && hasParameter("part-lower-x")) {
     var xCenter = (getParameter("part-upper-x") + getParameter("part-lower-x"))/2;
     writeBlock(gMotionModal.format(0), "X" + xyzFormat.format(xCenter)); // only desired when X is in the table
 
     var yHome = machineConfiguration.hasHomePositionY() ? machineConfiguration.getHomePositionY() : 0;
     writeBlock(gAbsIncModal.format(90), gFormat.format(53), gMotionModal.format(0), "Y" + xyzFormat.format(yHome));
-  } else if (!machineConfiguration.hasHomePositionX() && !machineConfiguration.hasHomePositionY()) {
-    writeBlock(gAbsIncModal.format(90), gFormat.format(53), "X" + xyzFormat.format(0), "Y" + xyzFormat.format(0)); // return to home
-  } else {
-    var homeX;
-    if (machineConfiguration.hasHomePositionX()) {
-      homeX = "X" + xyzFormat.format(machineConfiguration.getHomePositionX());
-    }
-    var homeY;
-    if (machineConfiguration.hasHomePositionY()) {
-      homeY = "Y" + xyzFormat.format(machineConfiguration.getHomePositionY());
-    }
-    writeBlock(gAbsIncModal.format(90), gFormat.format(53), gMotionModal.format(0), homeX, homeY);
   }
 
   if(properties.endChipShower) {

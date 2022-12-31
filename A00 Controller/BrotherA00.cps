@@ -30,6 +30,8 @@ allowHelicalMoves = true;
 allowedCircularPlanes = undefined; // allow any circular motion
 
 toolBreakOrPulloutTolerance = 0.005; // how much to overshoot the tool setter z location to ensure the setter gets triggered
+if (unit == MM)
+    toolBreakOrPulloutTolerance = 0.127; // change 0.005" to the equivalent in mm
 
 // user-defined properties
 properties = {

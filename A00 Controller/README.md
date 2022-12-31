@@ -40,3 +40,11 @@
 **Include post warnings** - Include post warnings (i.e. G20 unit parameter set in machine, M400 time, etc.) in the generated output.
 
 **Add (%) for file transfer** - Specifies whether to write leading and trailing % for file transfer.
+
+**Param. # for X location of tool setter** - Parameter number for the X location of the tool setter. Parameter # should be between #500-#599. Copy the value from SYSTEM PARAMETERS > Z MEASURMENT > PAL1 SIDE MSMT DEV POS X into this parameter.
+
+**Param. # for Y location of tool setter** - Parameter number for the Y location of the tool setter. Parameter # should be between #500-#599. Copy the value from SYSTEM PARAMETERS > Z MEASURMENT > PAL1 SIDE MSMT DEV POS Y into this parameter.
+
+**Param. # for Z location of tool setter** - Parameter number for the Z location of the tool setter. Parameter # should be between #500-#599. Copy the value from SYSTEM PARAMETERS > Z MEASURMENT > PAL1 SIDE MSMT DEV POS Z into this parameter.
+
+**Param. # for tool break feedrate** - Parameter number for the feedrate to use when checking for broken tools using the tool setter. Parameter # should be between #500-#599. Copy the value from SYSTEM PARAMETERS > Z MEASURMENT > MEASUREMENT FEEDRATE 1A into this parameter.

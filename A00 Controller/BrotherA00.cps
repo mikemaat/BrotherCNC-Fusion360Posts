@@ -29,6 +29,8 @@ maximumCircularSweep = toRad(180);
 allowHelicalMoves = true;
 allowedCircularPlanes = undefined; // allow any circular motion
 
+toolBreakOrPulloutTolerance = 0.005; // how much to overshoot the tool setter z location to ensure the setter gets triggered
+
 // user-defined properties
 properties = {
   writeMachine: true, // Write machine
@@ -51,7 +53,11 @@ properties = {
   endSpindleHome: false, // Use G28 G91 Z0 at end of program to return spindle to home
   positionAtEnd: "home",  // Moves the part in X in center under spindle at end of program (ONLY WORKS IF THE TABLE IS MOVING)
   preloadFirstToolAtEnd: true, // Preload the first tool at program end to prepare for the next run
-  includePostWarnings: true // Include post warnings (i.e. G20 unit parameter set in machine, M400 time, etc.) in the generated output
+  includePostWarnings: true, // Include post warnings (i.e. G20 unit parameter set in machine, M400 time, etc.) in the generated output
+  toolSetterLocationXParameter: 0, // X location of the toolsetter. Used by tool break control logic
+  toolSetterLocationYParameter: 0, // Y location of the toolsetter. Used by tool break control logic
+  toolSetterLocationZParameter: 0, // Z location of the toolsetter. Used by tool break control logic
+  toolBreakControlFeedRateParameter: 0 // Feedrate to use when checking for broken tools using the tool setter
 };
 
 // user-defined property definitions
@@ -81,6 +87,10 @@ propertyDefinitions = {
   preloadFirstToolAtEnd: {title:"Preload first tool at end", description:"Preloads the first tool at the end of the program to ready for the next run.", type:"boolean"},
   includePostWarnings: {title:"Include post warnings", description:"Include post warnings (i.e. G20 unit parameter set in machine, M400 time, etc.) in the generated output.", type:"boolean"},
   writeFileTransfer: {title:"Add (%) for file transfer", description:"Specifies whether to write leading and trailing % for file transfer.", type:"boolean"},
+  toolSetterLocationXParameter: {title:"Param. # for X location of tool setter", description:"Parameter number for the X location of the tool setter. Parameter should be between #500-#599. Copy the value from SYSTEM PARAMETERS > Z MEASURMENT > PAL1 SIDE MSMT DEV POS X into this parameter.", type:"integer"},
+  toolSetterLocationYParameter: {title:"Param. # for Y location of tool setter", description:"Parameter number for the Y location of the tool setter. Parameter should be between #500-#599. Copy the value from SYSTEM PARAMETERS > Z MEASURMENT > PAL1 SIDE MSMT DEV POS Y into this parameter.", type:"integer"},
+  toolSetterLocationZParameter: {title:"Param. # for Z location of tool setter", description:"Parameter number for the Z location of the tool setter. Parameter should be between #500-#599. Copy the value from SYSTEM PARAMETERS > Z MEASURMENT > PAL1 SIDE MSMT DEV POS Z into this parameter.", type:"integer"},
+  toolBreakControlFeedRateParameter: {title:"Param. # for tool break feedrate", description:"Parameter number for the feedrate to use when checking for broken tools using the tool setter. Parameter # should be between #500-#599. Copy the value from SYSTEM PARAMETERS > Z MEASURMENT > MEASUREMENT FEEDRATE 1A into this parameter.", type:"integer"}
 };
 
 var permittedCommentChars = " ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.,=-";
@@ -1474,6 +1484,7 @@ function onCommand(command) {
   case COMMAND_STOP_CHIP_TRANSPORT:
     return;
   case COMMAND_BREAK_CONTROL:
+    onToolBreakControl();
     return;
   case COMMAND_TOOL_MEASURE:
     return;
@@ -1492,6 +1503,38 @@ function onPassThrough(text) {
   var commands = String(text).split(",");
   for (text in commands) {
     writeBlock(commands[text]);
+  }
+}
+
+function onToolBreakControl() {
+  if (tool.number == undefined) // If no tool has been loaded, skip break control
+    return;
+  else if (properties.toolSetterLocationXParameter == 0 || 
+      properties.toolSetterLocationYParameter == 0 || 
+      properties.toolSetterLocationZParameter == 0 ||
+      properties.toolBreakControlFeedRateParameter == 0)
+    error(localize("Attempting to create tool break control code, but tool setter parameters have not been set."));
+  else if (properties.toolSetterLocationXParameter < 500 || properties.toolSetterLocationXParameter > 599 || 
+      properties.toolSetterLocationXParameter < 500 || properties.toolSetterLocationXParameter > 599 || 
+      properties.toolSetterLocationXParameter < 500 || properties.toolSetterLocationXParameter > 599 || 
+      properties.toolBreakControlFeedRateParameter < 500 || properties.toolBreakControlFeedRateParameter > 599)
+    error(localize("Invalid parameter number for tool setter location or break control feed rate. Parameter number must be between 500 and 599."));
+  else {
+    writeln("");
+    writeComment("TOOL BREAK CONTROL");
+    writeBlock(mFormat.format(5)) // stop spindle
+    writeBlock(mFormat.format(9)) // turn off coolant
+    writeBlock(gFormat.format(28), gAbsIncModal.format(91), gFormat.format(0), "Z" + xyzFormat.format(0));  	// go to z home
+    writeBlock(gAbsIncModal.format(90), gFormat.format(53), gFormat.format(0), "X#" + xyzFormat.format(properties.toolSetterLocationXParameter), "Y#" + xyzFormat.format(properties.toolSetterLocationYParameter)); // go to tool setter location
+    writeBlock(mFormat.format(406)) // turn on tool setter air blast
+    writeBlock(mFormat.format(19)) // orientate spindle
+    writeBlock(mFormat.format(321)) // make sure tool setter signal is currently off
+    writeBlock(gFormat.format(53), gFormat.format(1), "Z[#" + xyzFormat.format(properties.toolSetterLocationZParameter) + "+#110" + toolFormat.format(tool.number) + "+" + xyzFormat.format(toolBreakOrPulloutTolerance) + "]", "F#" + feedFormat.format(properties.toolBreakControlFeedRateParameter)); // first check for pullout
+    writeBlock(mFormat.format(407)) // turn off tool setter air blast
+    writeBlock(mFormat.format(321)) // check if tool setter is NOT triggered (it should NOT be if the tool does not have pullout)
+    writeComment("IF ALARM SHOWS SENSOR SIGNAL ON - PULLOUT HAS LIKELY OCCURRED"); // show a comment for when M321 errors out and stops the program
+    writeBlock(gFormat.format(53), gFormat.format(1), "Z[#" + xyzFormat.format(properties.toolSetterLocationZParameter) + "+#110" + toolFormat.format(tool.number) + "-" + xyzFormat.format(toolBreakOrPulloutTolerance) + "]", "F#" + feedFormat.format(properties.toolBreakControlFeedRateParameter)); // next check for breakage
+    writeBlock(mFormat.format(120)) // check if tool setter is triggered (it SHOULD be if the tool is not broken)
   }
 }
 
@@ -1559,6 +1602,7 @@ function onClose() {
       writeln("(SET CHIP SHOWER M400/M401 DURATION IN USER PARAMETERS)"); 
     }
     writeBlock(mFormat.format(400));
+    writeBlock(gFormat.format(4), "P5"); // delay for 5 seconds
     writeBlock(mFormat.format(401));
   }
   onImpliedCommand(COMMAND_END);

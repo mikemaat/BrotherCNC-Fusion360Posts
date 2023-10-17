@@ -2231,7 +2231,7 @@ function onClose() {
       // first stop spindle
       writeBlock(mFormat.format(5));
       // keep last tool, retract Z
-      writeBlock(gFormat.format(53), "Z" + xyzFormat.format(480));
+      writeBlock(gFormat.format(53), "Z" + xyzFormat.format(unit == MM ? 480 : 18.89));
   }
   // send machine to user defined home position
   writeBlock(gFormat.format(53), "X" + xyzFormat.format(properties.homeXaxis), "Y" + xyzFormat.format(properties.homeYaxis));
